@@ -1,179 +1,205 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Morse Code Trainer</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Morse Trainer</title>
+
 <style>
 *{box-sizing:border-box}
-body{
+
+html,body{
   margin:0;
-  min-height:100vh;
-  background:radial-gradient(circle at top,#3b3322,#14100a 55%,#050403);
-  color:#f3e3bd;
-  font-family:Georgia,"Times New Roman",serif;
-  text-align:center;
-  padding:12px;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#120d07;
+  color:#f5dfad;
+  font-family:Georgia,serif;
 }
+
+body{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+
+.app{
+  width:100vw;
+  height:100svh;
+  padding:8px;
+  display:grid;
+  grid-template-rows:auto auto 1fr auto;
+  gap:6px;
+  background:
+    radial-gradient(circle at top,#3b2c18,#130d06 58%,#050302);
+}
+
 h1{
-  margin:8px 0 4px;
-  font-size:30px;
-  letter-spacing:6px;
-  color:#efd9a2;
+  margin:0;
+  font-size:clamp(18px,5vw,28px);
+  letter-spacing:4px;
+  text-align:center;
+  color:#f3d58c;
 }
-#subtitle{
-  color:#b79b5d;
-  font-size:14px;
-  letter-spacing:2px;
-  margin-bottom:8px;
-}
+
 #current{
-  display:inline-block;
-  min-width:270px;
-  padding:10px 16px;
-  margin:8px 0 12px;
-  font-size:28px;
-  color:#33ff5e;
-  background:#060806;
-  border:2px solid #8d7440;
+  justify-self:center;
+  min-width:230px;
+  padding:6px 12px;
+  font-size:clamp(18px,5vw,26px);
+  color:#35ff5d;
+  background:#050704;
+  border:2px solid #9f8144;
   border-radius:8px;
   font-family:"Courier New",monospace;
-  box-shadow:inset 0 0 18px #000,0 0 10px #000;
+  text-align:center;
+  box-shadow:inset 0 0 12px #000;
 }
-#boardWrap{
-  width:100%;
-  overflow-x:auto;
+
+.boardBox{
+  min-height:0;
+  display:flex;
+  justify-content:center;
+  align-items:center;
 }
+
 svg{
   width:100%;
-  max-width:820px;
-  height:780px;
-  background:linear-gradient(145deg,#182018,#060806);
-  border:8px solid #6b542c;
-  border-radius:18px;
-  box-shadow:inset 0 0 35px #000,0 12px 35px #000;
+  height:100%;
+  max-width:520px;
+  max-height:100%;
+  background:linear-gradient(145deg,#1b2419,#070805);
+  border:5px solid #6f5428;
+  border-radius:14px;
+  box-shadow:inset 0 0 25px #000,0 8px 24px #000;
 }
+
 .line{
-  stroke:#bca773;
-  stroke-width:5;
-  stroke-linecap:round;
-  opacity:.9;
-}
-.node{
-  fill:#172218;
-  stroke:#d7c28a;
+  stroke:#bda66a;
   stroke-width:4;
+  stroke-linecap:round;
 }
+
+.node{
+  fill:#182416;
+  stroke:#e0c37a;
+  stroke-width:3;
+}
+
 .active{
-  fill:#33ff5e;
-  stroke:#eaffc7;
-  filter:drop-shadow(0 0 12px #33ff5e);
+  fill:#35ff5d;
+  stroke:#f5ffd2;
+  filter:drop-shadow(0 0 8px #35ff5d);
 }
+
 .letter{
-  fill:#fff2c6;
-  font-size:25px;
+  fill:#fff1bd;
+  font-size:23px;
   font-weight:900;
   text-anchor:middle;
   dominant-baseline:middle;
-  pointer-events:none;
   font-family:"Courier New",monospace;
+  pointer-events:none;
 }
+
+.controls{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:10px;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+
 button{
-  margin:10px 6px;
-  border:6px solid #6b542c;
-  background:radial-gradient(circle,#d4ba72 0%,#8a6d32 55%,#3d2d13 100%);
+  border:4px solid #6f5428;
+  background:radial-gradient(circle,#e5c673,#8d6a2d 58%,#35230d);
   color:#111;
-  font-weight:bold;
+  font-weight:900;
+  box-shadow:inset 0 0 12px #fff3,0 6px 18px #000;
   touch-action:none;
-  box-shadow:inset 0 0 18px #fff2,0 0 0 4px #1a1208,0 12px 28px #000;
 }
+
 #soundBtn{
-  width:auto;
-  height:auto;
+  height:54px;
+  padding:0 14px;
   border-radius:10px;
-  padding:14px 18px;
-  font-size:16px;
+  font-size:14px;
 }
-#btn{
-  width:175px;
-  height:175px;
+
+#keyBtn{
+  width:92px;
+  height:92px;
   border-radius:50%;
-  font-size:25px;
+  font-size:22px;
 }
+
 button:active{
-  transform:scale(.97);
+  transform:scale(.96);
   filter:brightness(1.25);
-}
-p{
-  color:#c9b37c;
-  margin:10px 0;
-  font-size:15px;
 }
 </style>
 </head>
 
 <body>
+<div class="app">
+  <h1>MORSE CODE</h1>
+  <div id="current">Start</div>
 
-<h1>MORSE CODE</h1>
-<div id="subtitle">FIELD TRAINING BOARD</div>
-<div id="current">Start</div>
+  <div class="boardBox">
+    <svg viewBox="0 0 520 620" id="board"></svg>
+  </div>
 
-<div id="boardWrap">
-  <svg viewBox="0 0 820 780" id="board"></svg>
+  <div class="controls">
+    <button id="soundBtn">ENABLE SOUND</button>
+    <button id="keyBtn">KEY</button>
+  </div>
 </div>
 
-<button id="soundBtn">ENABLE SOUND</button>
-<button id="btn">KEY</button>
-
-<p>Tap = dot • Hold = dash • Release, then pause to finish the letter.</p>
-
 <script>
-const morseMap = {
-  ".":"E","-":"T",
-  "..":"I",".-":"A","-.":"N","--":"M",
-  "...":"S","..-":"U",".-.":"R",".--":"W",
-  "-..":"D","-.-":"K","--.":"G","---":"O",
-  "....":"H","...-":"V","..-.":"F",".-..":"L",
-  ".--.":"P",".---":"J","-...":"B","-..-":"X",
-  "-.-.":"C","-.--":"Y","--..":"Z","--.-":"Q"
+const morseMap={
+  ".":"E","-":"T","..":"I",".-":"A","-.":"N","--":"M",
+  "...":"S","..-":"U",".-.":"R",".--":"W","-..":"D","-.-":"K","--.":"G","---":"O",
+  "....":"H","...-":"V","..-.":"F",".-..":"L",".--.":"P",".---":"J",
+  "-...":"B","-..-":"X","-.-.":"C","-.--":"Y","--..":"Z","--.-":"Q"
 };
 
-const nodes = {
-  "":     [410,70,"●","circle"],
+const nodes={
+  "":[260,45,"●","circle"],
 
-  "-":    [285,70,"T","box"],
-  "--":   [170,70,"M","box"],
-  "---":  [70,70,"O","box"],
-  "--.":  [170,205,"G","circle"],
-  "--.-": [70,205,"Q","box"],
-  "--..": [170,340,"Z","circle"],
+  "-":[180,45,"T","box"],
+  "--":[105,45,"M","box"],
+  "---":[45,45,"O","box"],
+  "--.":[105,140,"G","circle"],
+  "--.-":[45,140,"Q","box"],
+  "--..":[105,235,"Z","circle"],
 
-  "-.":   [285,465,"N","circle"],
-  "-.-":  [170,465,"K","box"],
-  "-.--": [70,465,"Y","box"],
-  "-.-.": [170,600,"C","circle"],
-  "-..":  [285,600,"D","circle"],
-  "-..-": [170,720,"X","box"],
-  "-...": [285,720,"B","circle"],
+  "-.":[180,335,"N","circle"],
+  "-.-":[105,335,"K","box"],
+  "-.--":[45,335,"Y","box"],
+  "-.-.":[105,430,"C","circle"],
+  "-..":[180,445,"D","circle"],
+  "-..-":[105,540,"X","box"],
+  "-...":[180,540,"B","circle"],
 
-  ".":    [535,70,"E","circle"],
-  "..":   [650,115,"I","circle"],
-  "...":  [760,115,"S","circle"],
-  "....": [760,255,"H","circle"],
-  "...-": [650,255,"V","box"],
+  ".":[340,45,"E","circle"],
+  "..":[415,85,"I","circle"],
+  "...":[485,85,"S","circle"],
+  "....":[485,180,"H","circle"],
+  "...-":[415,180,"V","box"],
 
-  "..-":  [535,255,"U","box"],
-  "..-.": [535,390,"F","circle"],
+  "..-":[340,180,"U","box"],
+  "..-.":[340,275,"F","circle"],
 
-  ".-":   [535,465,"A","box"],
-  ".-.":  [650,465,"R","circle"],
-  ".-..": [760,465,"L","circle"],
+  ".-":[340,335,"A","box"],
+  ".-.":[415,335,"R","circle"],
+  ".-..":[485,335,"L","circle"],
 
-  ".--":  [535,600,"W","box"],
-  ".--.": [650,600,"P","circle"],
-  ".---": [535,720,"J","box"]
+  ".--":[340,445,"W","box"],
+  ".--.":[415,445,"P","circle"],
+  ".---":[340,540,"J","box"]
 };
 
-const connections = [
+const connections=[
   ["","-"],["-","--"],["--","---"],["--","--."],["--.","--.-"],["--.","--.."],
   ["-","-."],["-.","-.-"],["-.-","-.--"],["-.-","-.-."],["-.","-.."],["-..","-..-"],["-..","-..."],
   ["","."],[".",".."],["..","..."],["...","...."],["...","...-"],
@@ -182,184 +208,191 @@ const connections = [
   [".-",".--"],[".--",".--."],[".--",".---"]
 ];
 
-let morse = "";
-let pressStart = 0;
-let timer;
-let audioCtx = null;
-let oscillator = null;
-let gain = null;
-let soundEnabled = false;
+let morse="";
+let pressStart=0;
+let timer=null;
+let audioCtx=null;
+let osc=null;
+let gain=null;
+let soundReady=false;
+let isPressing=false;
 
-const board = document.getElementById("board");
-const current = document.getElementById("current");
-const btn = document.getElementById("btn");
-const soundBtn = document.getElementById("soundBtn");
+const board=document.getElementById("board");
+const current=document.getElementById("current");
+const soundBtn=document.getElementById("soundBtn");
+const keyBtn=document.getElementById("keyBtn");
 
 function draw(){
-  board.innerHTML = "";
+  board.innerHTML="";
 
-  board.innerHTML += `
-    <rect x="18" y="18" width="784" height="744" rx="14" fill="none" stroke="#2b2111" stroke-width="4"/>
-    <text x="165" y="755" fill="#7e6a3d" font-size="18" font-family="Courier New">DASH SIDE</text>
-    <text x="545" y="755" fill="#7e6a3d" font-size="18" font-family="Courier New">DOT SIDE</text>
+  board.innerHTML+=`
+    <rect x="12" y="12" width="496" height="596" rx="12" fill="none" stroke="#2d2110" stroke-width="3"/>
   `;
 
   for(const [a,b] of connections){
-    const [x1,y1] = nodes[a];
-    const [x2,y2] = nodes[b];
-    board.innerHTML += `<line class="line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+    const [x1,y1]=nodes[a];
+    const [x2,y2]=nodes[b];
+    board.innerHTML+=`<line class="line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
   }
 
   for(const code in nodes){
-    const [x,y,label,type] = nodes[code];
-    const id = code === "" ? "start" : code;
+    const [x,y,label,type]=nodes[code];
+    const id=code===""?"start":code;
 
-    if(type === "box"){
-      board.innerHTML += `<rect id="node-${id}" class="node" x="${x-36}" y="${y-27}" width="72" height="54" rx="8"/>`;
-    } else {
-      board.innerHTML += `<circle id="node-${id}" class="node" cx="${x}" cy="${y}" r="34"/>`;
+    if(type==="box"){
+      board.innerHTML+=`<rect id="node-${id}" class="node" x="${x-27}" y="${y-20}" width="54" height="40" rx="7"/>`;
+    }else{
+      board.innerHTML+=`<circle id="node-${id}" class="node" cx="${x}" cy="${y}" r="27"/>`;
     }
 
-    board.innerHTML += `<text class="letter" x="${x}" y="${y}">${label}</text>`;
+    board.innerHTML+=`<text class="letter" x="${x}" y="${y}">${label}</text>`;
   }
 }
 
-async function enableSound(){
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+async function unlockSound(){
+  audioCtx=new (window.AudioContext || window.webkitAudioContext)();
   await audioCtx.resume();
-  soundEnabled = true;
-  soundBtn.textContent = "SOUND ON";
-  testBeep();
+  soundReady=true;
+  soundBtn.textContent="SOUND ON";
+  quickBeep();
 }
 
-function testBeep(){
-  const osc = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
+function quickBeep(){
+  if(!audioCtx)return;
 
-  osc.type = "sine";
-  osc.frequency.value = 700;
+  const o=audioCtx.createOscillator();
+  const g=audioCtx.createGain();
 
-  osc.connect(g);
+  o.type="sine";
+  o.frequency.value=720;
+
+  o.connect(g);
   g.connect(audioCtx.destination);
 
-  const now = audioCtx.currentTime;
-  g.gain.setValueAtTime(0, now);
-  g.gain.linearRampToValueAtTime(0.5, now + 0.01);
-  g.gain.linearRampToValueAtTime(0, now + 0.18);
+  const now=audioCtx.currentTime;
+  g.gain.setValueAtTime(0,now);
+  g.gain.linearRampToValueAtTime(0.8,now+0.01);
+  g.gain.setValueAtTime(0.8,now+0.12);
+  g.gain.linearRampToValueAtTime(0,now+0.16);
 
-  osc.start(now);
-  osc.stop(now + 0.2);
+  o.start(now);
+  o.stop(now+0.18);
 }
 
 function startTone(){
-  if(!soundEnabled || !audioCtx) return;
+  if(!soundReady || !audioCtx)return;
 
   stopTone();
 
-  oscillator = audioCtx.createOscillator();
-  gain = audioCtx.createGain();
+  osc=audioCtx.createOscillator();
+  gain=audioCtx.createGain();
 
-  oscillator.type = "sine";
-  oscillator.frequency.value = 700;
+  osc.type="sine";
+  osc.frequency.value=720;
 
-  oscillator.connect(gain);
+  osc.connect(gain);
   gain.connect(audioCtx.destination);
 
-  const now = audioCtx.currentTime;
-  gain.gain.setValueAtTime(0, now);
-  gain.gain.linearRampToValueAtTime(0.6, now + 0.01);
+  const now=audioCtx.currentTime;
+  gain.gain.setValueAtTime(0,now);
+  gain.gain.linearRampToValueAtTime(0.85,now+0.01);
 
-  oscillator.start(now);
+  osc.start(now);
 }
 
 function stopTone(){
-  if(!oscillator || !gain || !audioCtx) return;
+  if(!osc || !gain || !audioCtx)return;
 
-  const now = audioCtx.currentTime;
+  const now=audioCtx.currentTime;
   gain.gain.cancelScheduledValues(now);
-  gain.gain.setValueAtTime(0.6, now);
-  gain.gain.linearRampToValueAtTime(0, now + 0.03);
+  gain.gain.setValueAtTime(0.85,now);
+  gain.gain.linearRampToValueAtTime(0,now+0.025);
+  osc.stop(now+0.03);
 
-  oscillator.stop(now + 0.04);
-
-  oscillator = null;
-  gain = null;
+  osc=null;
+  gain=null;
 }
 
 function speak(text){
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.rate = 0.85;
+  const u=new SpeechSynthesisUtterance(text);
+  u.rate=.85;
   speechSynthesis.speak(u);
 }
 
 function update(){
-  document.querySelectorAll(".node").forEach(n => n.classList.remove("active"));
+  document.querySelectorAll(".node").forEach(n=>n.classList.remove("active"));
 
-  const id = morse ? "node-" + morse : "node-start";
-  const node = document.getElementById(id);
-  if(node) node.classList.add("active");
+  const id=morse ? "node-"+morse : "node-start";
+  const node=document.getElementById(id);
+  if(node)node.classList.add("active");
 
   if(!morse){
-    current.textContent = "Start";
+    current.textContent="Start";
     return;
   }
 
-  const letter = morseMap[morse];
-  current.textContent = letter ? `${morse} = ${letter}` : `${morse} = keep going`;
+  const letter=morseMap[morse];
+  current.textContent=letter ? `${morse} = ${letter}` : `${morse} = keep going`;
 }
 
 function finish(){
-  const letter = morseMap[morse] || "?";
-  current.textContent = "Letter: " + letter;
-  speak(letter === "?" ? "Unknown" : letter);
+  const letter=morseMap[morse] || "?";
+  current.textContent="Letter: "+letter;
+  speak(letter==="?"?"Unknown":letter);
 
   setTimeout(()=>{
-    morse = "";
+    morse="";
     update();
-  },950);
+  },850);
 }
 
-function start(e){
+function startPress(e){
   e.preventDefault();
+
+  if(!soundReady){
+    current.textContent="Tap ENABLE SOUND first";
+    return;
+  }
+
   clearTimeout(timer);
-  pressStart = Date.now();
+  isPressing=true;
+  pressStart=Date.now();
   startTone();
 }
 
-function end(e){
+function endPress(e){
   e.preventDefault();
+
+  if(!isPressing)return;
+  isPressing=false;
+
   stopTone();
 
-  const length = Date.now() - pressStart;
-  morse += length < 300 ? "." : "-";
+  const held=Date.now()-pressStart;
+  morse += held < 300 ? "." : "-";
 
-  if(morse.length > 4){
-    morse = "";
-    current.textContent = "Too long. Start again.";
+  if(morse.length>4){
+    morse="";
+    current.textContent="Too long";
     update();
     return;
   }
 
   update();
-  timer = setTimeout(finish, 1100);
+  timer=setTimeout(finish,1000);
 }
 
 draw();
 update();
 
-soundBtn.addEventListener("click", enableSound);
+soundBtn.addEventListener("click",unlockSound);
+soundBtn.addEventListener("touchstart",unlockSound,{passive:true});
 
-btn.addEventListener("mousedown", start);
-btn.addEventListener("mouseup", end);
-btn.addEventListener("mouseleave", e => {
-  if(pressStart) end(e);
-});
-
-btn.addEventListener("touchstart", start, {passive:false});
-btn.addEventListener("touchend", end, {passive:false});
-btn.addEventListener("touchcancel", end, {passive:false});
+keyBtn.addEventListener("pointerdown",startPress);
+keyBtn.addEventListener("pointerup",endPress);
+keyBtn.addEventListener("pointerleave",endPress);
+keyBtn.addEventListener("pointercancel",endPress);
 </script>
-
 </body>
 </html>
