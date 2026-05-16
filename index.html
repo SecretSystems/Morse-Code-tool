@@ -30,8 +30,7 @@ body{
   display:grid;
   grid-template-rows:auto auto 1fr auto;
   gap:6px;
-  background:
-    radial-gradient(circle at top,#3b2c18,#130d06 58%,#050302);
+  background:radial-gradient(circle at top,#3b2c18,#130d06 58%,#050302);
 }
 
 h1{
@@ -66,7 +65,7 @@ h1{
 svg{
   width:100%;
   height:100%;
-  max-width:520px;
+  max-width:540px;
   max-height:100%;
   background:linear-gradient(145deg,#1b2419,#070805);
   border:5px solid #6f5428;
@@ -94,7 +93,7 @@ svg{
 
 .letter{
   fill:#fff1bd;
-  font-size:23px;
+  font-size:22px;
   font-weight:900;
   text-anchor:middle;
   dominant-baseline:middle;
@@ -119,18 +118,18 @@ button{
   touch-action:none;
 }
 
-#soundBtn{
-  height:54px;
+#keyBtn{
+  width:104px;
+  height:104px;
+  border-radius:50%;
+  font-size:24px;
+}
+
+#resetBtn{
+  height:52px;
   padding:0 14px;
   border-radius:10px;
   font-size:14px;
-}
-
-#keyBtn{
-  width:92px;
-  height:92px;
-  border-radius:50%;
-  font-size:22px;
 }
 
 button:active{
@@ -146,11 +145,11 @@ button:active{
   <div id="current">Start</div>
 
   <div class="boardBox">
-    <svg viewBox="0 0 520 620" id="board"></svg>
+    <svg viewBox="0 0 540 620" id="board"></svg>
   </div>
 
   <div class="controls">
-    <button id="soundBtn">ENABLE SOUND</button>
+    <button id="resetBtn">RESET</button>
     <button id="keyBtn">KEY</button>
   </div>
 </div>
@@ -164,39 +163,40 @@ const morseMap={
 };
 
 const nodes={
-  "":[260,45,"●","circle"],
+  "":[270,45,"●","circle"],
 
-  "-":[180,45,"T","box"],
-  "--":[105,45,"M","box"],
+  "-":[185,45,"T","box"],
+  "--":[110,45,"M","box"],
   "---":[45,45,"O","box"],
-  "--.":[105,140,"G","circle"],
-  "--.-":[45,140,"Q","box"],
-  "--..":[105,235,"Z","circle"],
+  "--.":[110,145,"G","circle"],
+  "--.-":[45,145,"Q","box"],
+  "--..":[110,245,"Z","circle"],
 
-  "-.":[180,335,"N","circle"],
-  "-.-":[105,335,"K","box"],
-  "-.--":[45,335,"Y","box"],
-  "-.-.":[105,430,"C","circle"],
-  "-..":[180,445,"D","circle"],
-  "-..-":[105,540,"X","box"],
-  "-...":[180,540,"B","circle"],
+  "-.":[185,345,"N","circle"],
+  "-.-":[110,345,"K","box"],
+  "-.--":[45,345,"Y","box"],
+  "-.-.":[110,445,"C","circle"],
+  "-..":[185,460,"D","circle"],
+  "-..-":[110,555,"X","box"],
+  "-...":[185,555,"B","circle"],
 
-  ".":[340,45,"E","circle"],
-  "..":[415,85,"I","circle"],
-  "...":[485,85,"S","circle"],
-  "....":[485,180,"H","circle"],
-  "...-":[415,180,"V","box"],
+  ".":[355,45,"E","circle"],
 
-  "..-":[340,180,"U","box"],
-  "..-.":[340,275,"F","circle"],
+  "..":[455,100,"I","circle"],
+  "...":[500,205,"S","circle"],
+  "....":[500,305,"H","circle"],
+  "...-":[455,305,"V","box"],
 
-  ".-":[340,335,"A","box"],
-  ".-.":[415,335,"R","circle"],
-  ".-..":[485,335,"L","circle"],
+  "..-":[395,225,"U","box"],
+  "..-.":[395,330,"F","circle"],
 
-  ".--":[340,445,"W","box"],
-  ".--.":[415,445,"P","circle"],
-  ".---":[340,540,"J","box"]
+  ".-":[355,405,"A","box"],
+  ".-.":[455,405,"R","circle"],
+  ".-..":[505,505,"L","circle"],
+
+  ".--":[355,505,"W","box"],
+  ".--.":[455,555,"P","circle"],
+  ".---":[355,555,"J","box"]
 };
 
 const connections=[
@@ -219,14 +219,14 @@ let isPressing=false;
 
 const board=document.getElementById("board");
 const current=document.getElementById("current");
-const soundBtn=document.getElementById("soundBtn");
 const keyBtn=document.getElementById("keyBtn");
+const resetBtn=document.getElementById("resetBtn");
 
 function draw(){
   board.innerHTML="";
 
   board.innerHTML+=`
-    <rect x="12" y="12" width="496" height="596" rx="12" fill="none" stroke="#2d2110" stroke-width="3"/>
+    <rect x="12" y="12" width="516" height="596" rx="12" fill="none" stroke="#2d2110" stroke-width="3"/>
   `;
 
   for(const [a,b] of connections){
@@ -249,38 +249,16 @@ function draw(){
   }
 }
 
-async function unlockSound(){
+async function unlockSoundIfNeeded(){
+  if(soundReady && audioCtx) return;
+
   audioCtx=new (window.AudioContext || window.webkitAudioContext)();
   await audioCtx.resume();
   soundReady=true;
-  soundBtn.textContent="SOUND ON";
-  quickBeep();
-}
-
-function quickBeep(){
-  if(!audioCtx)return;
-
-  const o=audioCtx.createOscillator();
-  const g=audioCtx.createGain();
-
-  o.type="sine";
-  o.frequency.value=720;
-
-  o.connect(g);
-  g.connect(audioCtx.destination);
-
-  const now=audioCtx.currentTime;
-  g.gain.setValueAtTime(0,now);
-  g.gain.linearRampToValueAtTime(0.8,now+0.01);
-  g.gain.setValueAtTime(0.8,now+0.12);
-  g.gain.linearRampToValueAtTime(0,now+0.16);
-
-  o.start(now);
-  o.stop(now+0.18);
 }
 
 function startTone(){
-  if(!soundReady || !audioCtx)return;
+  if(!soundReady || !audioCtx) return;
 
   stopTone();
 
@@ -295,17 +273,17 @@ function startTone(){
 
   const now=audioCtx.currentTime;
   gain.gain.setValueAtTime(0,now);
-  gain.gain.linearRampToValueAtTime(0.85,now+0.01);
+  gain.gain.linearRampToValueAtTime(0.9,now+0.01);
 
   osc.start(now);
 }
 
 function stopTone(){
-  if(!osc || !gain || !audioCtx)return;
+  if(!osc || !gain || !audioCtx) return;
 
   const now=audioCtx.currentTime;
   gain.gain.cancelScheduledValues(now);
-  gain.gain.setValueAtTime(0.85,now);
+  gain.gain.setValueAtTime(0.9,now);
   gain.gain.linearRampToValueAtTime(0,now+0.025);
   osc.stop(now+0.03);
 
@@ -325,7 +303,7 @@ function update(){
 
   const id=morse ? "node-"+morse : "node-start";
   const node=document.getElementById(id);
-  if(node)node.classList.add("active");
+  if(node) node.classList.add("active");
 
   if(!morse){
     current.textContent="Start";
@@ -339,7 +317,7 @@ function update(){
 function finish(){
   const letter=morseMap[morse] || "?";
   current.textContent="Letter: "+letter;
-  speak(letter==="?"?"Unknown":letter);
+  speak(letter==="?" ? "Unknown" : letter);
 
   setTimeout(()=>{
     morse="";
@@ -347,13 +325,10 @@ function finish(){
   },850);
 }
 
-function startPress(e){
+async function startPress(e){
   e.preventDefault();
 
-  if(!soundReady){
-    current.textContent="Tap ENABLE SOUND first";
-    return;
-  }
+  await unlockSoundIfNeeded();
 
   clearTimeout(timer);
   isPressing=true;
@@ -364,7 +339,7 @@ function startPress(e){
 function endPress(e){
   e.preventDefault();
 
-  if(!isPressing)return;
+  if(!isPressing) return;
   isPressing=false;
 
   stopTone();
@@ -383,11 +358,18 @@ function endPress(e){
   timer=setTimeout(finish,1000);
 }
 
+function reset(){
+  morse="";
+  clearTimeout(timer);
+  stopTone();
+  isPressing=false;
+  update();
+}
+
 draw();
 update();
 
-soundBtn.addEventListener("click",unlockSound);
-soundBtn.addEventListener("touchstart",unlockSound,{passive:true});
+resetBtn.addEventListener("click",reset);
 
 keyBtn.addEventListener("pointerdown",startPress);
 keyBtn.addEventListener("pointerup",endPress);
