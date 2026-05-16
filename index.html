@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Morse Code Trainer</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body{
+  margin:0;
+  background:#061018;
+  color:white;
+  font-family:Arial, sans-serif;
+  text-align:center;
+  padding:10px;
+}
+h1{
+  margin:8px 0;
+  font-size:28px;
+  letter-spacing:4px;
+}
+#current{
+  font-size:30px;
+  color:#39ff63;
+  margin:8px 0 12px;
+  min-height:38px;
+}
+svg{
+  width:100%;
+  max-width:460px;
+  height:640px;
+  background:#08131d;
+  border:3px solid #b7d5df;
+  border-radius:18px;
+  box-shadow:0 0 25px #000;
+}
+.line{
+  stroke:#b7d5df;
+  stroke-width:5;
+  stroke-linecap:round;
+}
+.node{
+  fill:#182a24;
+  stroke:#d8f4ff;
+  stroke-width:4;
+}
+.active{
+  fill:#39ff63;
+  filter:drop-shadow(0 0 10px #39ff63);
+}
+.letter{
+  fill:white;
+  font-size:22px;
+  font-weight:700;
+  text-anchor:middle;
+  dominant-baseline:middle;
+  pointer-events:none;
+}
+button{
+  margin-top:12px;
+  width:165px;
+  height:165px;
+  border-radius:50%;
+  border:0;
+  background:#39ff63;
+  font-size:24px;
+  font-weight:bold;
+  touch-action:none;
+  box-shadow:0 0 30px #39ff63;
+}
+p{color:#c7d6dd;margin:8px 0;}
+</style>
+</head>
+<body>
+
+<h1>MORSE CODE</h1>
+<div id="current">Start</div>
+
+<svg viewBox="0 0 460 640" id="board"></svg>
+
+<button id="btn">PRESS</button>
+<p>Tap = dot • Hold = dash • Pause = finish</p>
+
+<script>
+const morseMap = {
+  ".":"E","-":"T",
+  "..":"I",".-":"A","-.":"N","--":"M",
+  "...":"S","..-":"U",".-.":"R",".--":"W",
+  "-..":"D","-.-":"K","--.":"G","---":"O",
+  "....":"H","...-":"V","..-.":"F",".-..":"L",
+  ".--.":"P",".---":"J","-...":"B","-..-":"X",
+  "-.-.":"C","-.--":"Y","--..":"Z","--.-":"Q"
+};
+
+// circle = dot, box = dash
+const nodes = {
+  "": [230,60,"START","circle"],
+
+  "-": [150,60,"T","box"],
+  "--": [85,60,"M","box"],
+  "---": [30,60,"O","box"],
+  "--.": [85,155,"G","circle"],
+  "--.-": [30,155,"Q","box"],
+  "--..": [85,250,"Z","circle"],
+
+  "-.": [150,355,"N","circle"],
+  "-.-": [85,355,"K","box"],
+  "-.--": [30,355,"Y","box"],
+  "-.-.": [85,455,"C","circle"],
+  "-..": [150,485,"D","circle"],
+  "-..-": [85,485,"X","box"],
+  "-...": [150,575,"B","circle"],
+
+  ".": [280,60,"E","circle"],
+  "..": [340,60,"I","circle"],
+  "...": [400,60,"S","circle"],
+  "....": [445,60,"H","circle"],
+  "...-": [400,155,"V","box"],
+
+  "..-": [340,155,"U","box"],
+  "..-.": [340,250,"F","circle"],
+
+  ".-": [280,355,"A","box"],
+  ".-.": [340,355,"R","circle"],
+  ".-..": [400,355,"L","circle"],
+
+  ".--": [280,485,"W","box"],
+  ".--.": [340,485,"P","circle"],
+  ".---": [280,575,"J","box"]
+};
+
+const connections = [
+  ["","-"],["-","--"],["--","---"],["--","--."],["--.","--.-"],["--.","--.."],
+  ["-","-."],["-.","-.-"],["-.-","-.--"],["-.-","-.-."],["-.","-.."],["-..","-..-"],["-..","-..."],
+
+  ["","."],[".",".."],["..","..."],["...","...."],["...","...-"],
+  ["..","..-"],["..-","..-."],
+  [".",".-"],[".-",".-."],[".-.",".-.."],
+  [".-",".--"],[".--",".--."],[".--",".---"]
+];
+
+let morse = "";
+let pressStart = 0;
+let timer;
+
+const board = document.getElementById("board");
+const current = document.getElementById("current");
+const btn = document.getElementById("btn");
+
+function draw(){
+  board.innerHTML = "";
+
+  for(const [a,b] of connections){
+    const [x1,y1] = nodes[a];
+    const [x2,y2] = nodes[b];
+    board.innerHTML += `<line class="line" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>`;
+  }
+
+  for(const code in nodes){
+    const [x,y,label,type] = nodes[code];
+    const id = code === "" ? "start" : code;
+
+    if(type === "box"){
+      board.innerHTML += `<rect id="node-${id}" class="node" x="${x-24}" y="${y-19}" width="48" height="38" rx="6"/>`;
+    } else {
+      board.innerHTML += `<circle id="node-${id}" class="node" cx="${x}" cy="${y}" r="24"/>`;
+    }
+
+    board.innerHTML += `<text class="letter" x="${x}" y="${y}">${label}</text>`;
+  }
+}
+
+function speak(text){
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.rate = 0.9;
+  speechSynthesis.speak(u);
+}
+
+function update(){
+  document.querySelectorAll(".node").forEach(n => n.classList.remove("active"));
+
+  const id = morse ? "node-" + morse : "node-start";
+  const node = document.getElementById(id);
+  if(node) node.classList.add("active");
+
+  if(!morse){
+    current.textContent = "Start";
+    return;
+  }
+
+  const letter = morseMap[morse];
+  current.textContent = letter ? `${morse} = ${letter}` : `${morse} = keep going`;
+}
+
+function finish(){
+  const letter = morseMap[morse] || "?";
+  current.textContent = "Letter: " + letter;
+  speak(letter === "?" ? "Unknown" : letter);
+
+  setTimeout(()=>{
+    morse = "";
+    update();
+  },900);
+}
+
+function start(e){
+  e.preventDefault();
+  clearTimeout(timer);
+  pressStart = Date.now();
+}
+
+function end(e){
+  e.preventDefault();
+
+  const length = Date.now() - pressStart;
+  morse += length < 300 ? "." : "-";
+
+  if(morse.length > 4){
+    morse = "";
+    current.textContent = "Too long. Start again.";
+    update();
+    return;
+  }
+
+  update();
+  timer = setTimeout(finish, 1100);
+}
+
+draw();
+update();
+
+btn.addEventListener("mousedown", start);
+btn.addEventListener("mouseup", end);
+btn.addEventListener("touchstart", start);
+btn.addEventListener("touchend", end);
+</script>
+
+</body>
+</html>
