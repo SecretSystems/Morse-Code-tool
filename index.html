@@ -25,8 +25,8 @@ h1{
 }
 svg{
   width:100%;
-  max-width:460px;
-  height:640px;
+  max-width:560px;
+  height:720px;
   background:#08131d;
   border:3px solid #b7d5df;
   border-radius:18px;
@@ -48,7 +48,7 @@ svg{
 }
 .letter{
   fill:white;
-  font-size:22px;
+  font-size:21px;
   font-weight:700;
   text-anchor:middle;
   dominant-baseline:middle;
@@ -74,7 +74,7 @@ p{color:#c7d6dd;margin:8px 0;}
 <h1>MORSE CODE</h1>
 <div id="current">Start</div>
 
-<svg viewBox="0 0 460 640" id="board"></svg>
+<svg viewBox="0 0 560 720" id="board"></svg>
 
 <button id="btn">PRESS</button>
 <p>Tap = dot • Hold = dash • Pause = finish</p>
@@ -90,41 +90,40 @@ const morseMap = {
   "-.-.":"C","-.--":"Y","--..":"Z","--.-":"Q"
 };
 
-// circle = dot, box = dash
 const nodes = {
-  "": [230,60,"START","circle"],
+  "": [280,60,"START","circle"],
 
-  "-": [150,60,"T","box"],
-  "--": [85,60,"M","box"],
-  "---": [30,60,"O","box"],
-  "--.": [85,155,"G","circle"],
-  "--.-": [30,155,"Q","box"],
-  "--..": [85,250,"Z","circle"],
+  "-": [180,60,"T","box"],
+  "--": [105,60,"M","box"],
+  "---": [40,60,"O","box"],
+  "--.": [105,170,"G","circle"],
+  "--.-": [40,170,"Q","box"],
+  "--..": [105,280,"Z","circle"],
 
-  "-.": [150,355,"N","circle"],
-  "-.-": [85,355,"K","box"],
-  "-.--": [30,355,"Y","box"],
-  "-.-.": [85,455,"C","circle"],
-  "-..": [150,485,"D","circle"],
-  "-..-": [85,485,"X","box"],
-  "-...": [150,575,"B","circle"],
+  "-.": [180,400,"N","circle"],
+  "-.-": [105,400,"K","box"],
+  "-.--": [40,400,"Y","box"],
+  "-.-.": [105,515,"C","circle"],
+  "-..": [180,545,"D","circle"],
+  "-..-": [105,545,"X","box"],
+  "-...": [180,650,"B","circle"],
 
-  ".": [280,60,"E","circle"],
-  "..": [340,60,"I","circle"],
-  "...": [400,60,"S","circle"],
-  "....": [445,60,"H","circle"],
-  "...-": [400,155,"V","box"],
+  ".": [340,60,"E","circle"],
+  "..": [415,60,"I","circle"],
+  "...": [490,60,"S","circle"],
+  "....": [540,60,"H","circle"],
+  "...-": [490,170,"V","box"],
 
-  "..-": [340,155,"U","box"],
-  "..-.": [340,250,"F","circle"],
+  "..-": [415,170,"U","box"],
+  "..-.": [415,280,"F","circle"],
 
-  ".-": [280,355,"A","box"],
-  ".-.": [340,355,"R","circle"],
-  ".-..": [400,355,"L","circle"],
+  ".-": [340,400,"A","box"],
+  ".-.": [415,400,"R","circle"],
+  ".-..": [490,400,"L","circle"],
 
-  ".--": [280,485,"W","box"],
-  ".--.": [340,485,"P","circle"],
-  ".---": [280,575,"J","box"]
+  ".--": [340,545,"W","box"],
+  ".--.": [415,545,"P","circle"],
+  ".---": [340,650,"J","box"]
 };
 
 const connections = [
@@ -140,6 +139,7 @@ const connections = [
 let morse = "";
 let pressStart = 0;
 let timer;
+let audioCtx;
 
 const board = document.getElementById("board");
 const current = document.getElementById("current");
@@ -159,13 +159,38 @@ function draw(){
     const id = code === "" ? "start" : code;
 
     if(type === "box"){
-      board.innerHTML += `<rect id="node-${id}" class="node" x="${x-24}" y="${y-19}" width="48" height="38" rx="6"/>`;
+      board.innerHTML += `<rect id="node-${id}" class="node" x="${x-27}" y="${y-22}" width="54" height="44" rx="7"/>`;
     } else {
-      board.innerHTML += `<circle id="node-${id}" class="node" cx="${x}" cy="${y}" r="24"/>`;
+      board.innerHTML += `<circle id="node-${id}" class="node" cx="${x}" cy="${y}" r="27"/>`;
     }
 
     board.innerHTML += `<text class="letter" x="${x}" y="${y}">${label}</text>`;
   }
+}
+
+function playMorseTone(seconds){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+
+  const oscillator = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+
+  oscillator.type = "sine";
+  oscillator.frequency.value = 700;
+
+  oscillator.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  const now = audioCtx.currentTime;
+
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.35, now + 0.01);
+  gain.gain.setValueAtTime(0.35, now + seconds);
+  gain.gain.linearRampToValueAtTime(0, now + seconds + 0.03);
+
+  oscillator.start(now);
+  oscillator.stop(now + seconds + 0.04);
 }
 
 function speak(text){
@@ -212,7 +237,14 @@ function end(e){
   e.preventDefault();
 
   const length = Date.now() - pressStart;
-  morse += length < 300 ? "." : "-";
+
+  if(length < 300){
+    morse += ".";
+    playMorseTone(0.10);
+  } else {
+    morse += "-";
+    playMorseTone(0.30);
+  }
 
   if(morse.length > 4){
     morse = "";
